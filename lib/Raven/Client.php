@@ -299,7 +299,8 @@ class Raven_Client
     {
         $url = parse_url($dsn);
         $scheme = (isset($url['scheme']) ? $url['scheme'] : '');
-        if (!in_array($scheme, array('http', 'https'))) {
+        // for innogames we are still able to use udp as we have a special proxy running
+        if (!in_array($scheme, array('http', 'https', 'udp'))) {
             throw new InvalidArgumentException('Unsupported Sentry DSN scheme: ' . (!empty($scheme) ? $scheme : '<not set>'));
         }
         $netloc = (isset($url['host']) ? $url['host'] : null);
