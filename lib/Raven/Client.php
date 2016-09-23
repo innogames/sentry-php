@@ -814,7 +814,30 @@ class Raven_Client
     {
         $parts = parse_url($url);
         $parts['netloc'] = $parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : null);
-        $this->send_http($url, $data, $headers);
+
+        if ($parts['scheme'] === 'udp')
+            return $this->send_udp($parts['netloc'], $data, $headers['X-Sentry-Auth']);
+
+        return $this->send_http($url, $data, $headers);
+    }
+
+    /**
+     * Send data to Sentry
+     *
+     * @param string    $url        Full URL to Sentry
+     * @param array     $data       Associative array of data to log
+     * @param array     $headers    Associative array of headers
+     */
+    private function send_udp($netloc, $data, $headers)
+    {
+        list($host, $port) = explode(':', $netloc);
+        $raw_data = $headers."\n\n".$data;
+
+        $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+        socket_sendto($sock, $raw_data, strlen($raw_data), 0, $host, $port);
+        socket_close($sock);
+
+        return true;
     }
 
     protected function get_default_ca_cert()
